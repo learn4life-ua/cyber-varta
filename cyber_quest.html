@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кібер-Варта: Квест Цифрової Безпеки</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .progress-bar { transition: width 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
+
+    <div id="game-container" class="max-w-2xl w-full bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-700 relative">
+        
+        <!-- Progress Header -->
+        <div class="h-1.5 w-full bg-slate-700">
+            <div id="top-progress" class="h-full bg-blue-500 progress-bar" style="width: 0%"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 p-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Кібер-Варта 2026
+                </h1>
+                <div id="health-container" class="flex gap-1">
+                    <!-- Hearts injected by JS -->
+                </div>
+            </div>
+            <p class="text-blue-100 text-xs mt-1 uppercase tracking-wider font-semibold">Перевір свій рівень захищеності в мережі</p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="p-8 text-center space-y-6">
+            <div class="bg-blue-900/30 p-4 rounded-xl border border-blue-500/30">
+                <p class="text-slate-300 text-sm italic">"Кібербезпека — це не просто знання, це цифрова культура, яка захищає ваше життя та кошти."</p>
+            </div>
+            <h2 class="text-2xl font-bold">Чи готові ви до викликів цифрового світу?</h2>
+            <p class="text-slate-300">Пройдіть 8 рівнів: від розпізнавання фішингу до захисту персональних даних та протидії штучному інтелекту шахраїв.</p>
+            <button onclick="startGame()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-12 rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-blue-500/20">
+                РОЗПОЧАТИ ТЕСТУВАННЯ
+            </button>
+        </div>
+
+        <!-- Question Screen -->
+        <div id="question-screen" class="hidden p-8 space-y-6 fade-in">
+            <div class="flex justify-between items-center text-sm font-bold">
+                <span id="progress-text" class="text-blue-400">РІВЕНЬ 1</span>
+                <span id="score-text" class="text-green-400">МІЦНІСТЬ: 100%</span>
+            </div>
+            
+            <div id="question-content" class="space-y-6">
+                <h3 id="question-title" class="text-xl font-semibold leading-snug">Завантаження питання...</h3>
+                <div id="options" class="grid grid-cols-1 gap-3">
+                    <!-- Options -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden p-8 text-center space-y-8 fade-in">
+            <div id="result-icon" class="flex justify-center"></div>
+            <div>
+                <h2 id="result-title" class="text-3xl font-bold">Ваш результат</h2>
+                <p id="result-desc" class="text-slate-400 mt-2 leading-relaxed"></p>
+            </div>
+            
+            <div class="bg-slate-700/50 p-6 rounded-2xl border border-slate-600">
+                <div class="text-sm text-slate-400 mb-2">Правильних відповідей:</div>
+                <div id="final-stats" class="text-4xl font-black text-blue-400">0 / 8</div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="restartGame()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-8 rounded-lg transition-all">
+                    Спробувати ще раз
+                </button>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest">День безпечного інтернету 2026</p>
+            </div>
+        </div>
+
+        <!-- Feedback Overlay -->
+        <div id="feedback" class="hidden fixed inset-0 flex items-center justify-center bg-black/80 z-50 p-4">
+            <div id="feedback-card" class="bg-slate-800 p-8 rounded-2xl border-2 max-w-md w-full text-center space-y-6 shadow-2xl transform scale-100 transition-transform">
+                <div id="feedback-icon" class="text-6xl"></div>
+                <div>
+                    <h4 id="feedback-title" class="text-2xl font-bold"></h4>
+                    <p id="feedback-msg" class="text-slate-300 mt-3 text-lg"></p>
+                </div>
+                <button onclick="nextQuestion()" class="w-full bg-blue-600 py-3 rounded-xl font-bold text-lg hover:bg-blue-500 transition-colors">Продовжити</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                title: "Вам телефонують з 'техпідтримки банку' і кажуть, що зафіксовано підозрілу операцію. Просять назвати CVV-код вашої картки для її 'захисту'. Ваші дії?",
+                options: [
+                    { text: "Назву код, щоб картку не заблокували.", correct: false, msg: "Банк НІКОЛИ не запитує CVV-код або паролі з SMS. Це класичний вішинг!" },
+                    { text: "Покладу слухавку і сам перезвоню на офіційний номер банку, вказаний на звороті картки.", correct: true, msg: "Чудово! Це єдиний безпечний спосіб перевірити інформацію." }
+                ]
+            },
+            {
+                title: "Ви знайшли 'безкоштовну' версію платної програми або гри на невідомому сайті. Антивірус попереджає про загрозу, але файл виглядає потрібним. Що зробите?",
+                options: [
+                    { text: "Вимкну антивірус на час встановлення, бо це просто 'захист від піратства'.", correct: false, msg: "Такі файли часто містять віруси-стілери, що крадуть ваші паролі та дані." },
+                    { text: "Не буду завантажувати файл і знайду безпечну альтернативу в офіційному магазині.", correct: true, msg: "Правильно! Безкоштовний сир буває лише у пастці для даних." }
+                ]
+            },
+            {
+                title: "Вам дзвонить знайомий у відеочаті. Зображення трохи розмите, голос дивний, і він терміново просить гроші в борг через 'біду'. Це може бути:",
+                options: [
+                    { text: "Просто погана якість зв'язку.", correct: false, msg: "Сучасні шахраї використовують дипфейки для підробки обличчя та голосу." },
+                    { text: "Дипфейк (AI-підробка). Потрібно перевірити особу іншим способом.", correct: true, msg: "Саме так! Завжди перепитуйте те, що знає тільки справжній знайомий." }
+                ]
+            },
+            {
+                title: "Ви хочете зайти в свій онлайн-банкінг або пошту, використовуючи безкоштовний Wi-Fi у торговому центрі. Як це зробити безпечно?",
+                options: [
+                    { text: "Просто зайду, адже більшість сайтів використовують HTTPS.", correct: false, msg: "Відкриті мережі вразливі до перехоплення даних. HTTPS не гарантує повної безпеки у фейковій точці доступу." },
+                    { text: "Використаю мобільний інтернет або надійний VPN.", correct: true, msg: "Вірно! Це шифрує ваш трафік і захищає від сторонніх очей." }
+                ]
+            },
+            {
+                title: "Який метод захисту акаунта є на сьогодні найбільш надійним від зламу?",
+                options: [
+                    { text: "Дуже складний пароль, який я змінюю щомісяця.", correct: false, msg: "Навіть складний пароль можна вкрасти фішингом. Цього замало." },
+                    { text: "Двофакторна автентифікація (2FA) через додаток-підтверджувач.", correct: true, msg: "Найкращий вибір! Навіть знаючи пароль, шахрай не отримає другий ключ." }
+                ]
+            },
+            {
+                title: "Ви бачите QR-код у громадському місці з написом 'Знижки 90% на все! Скануй зараз'. Що варто зробити?",
+                options: [
+                    { text: "Швидко відсканую, поки акція не закінчилась.", correct: false, msg: "Це може бути 'квішинг' — підміна QR-коду для переходу на шкідливий сайт." },
+                    { text: "Поставлюся скептично і не буду сканувати неперевірені коди.", correct: true, msg: "Правильно. QR-код — це те саме посилання, яке може бути небезпечним." }
+                ]
+            },
+            {
+                title: "Вам прийшов електронний лист від 'Державної служби' про нараховану компенсацію. Для отримання пропонують натиснути на кнопку та ввести дані картки. Ваші дії?",
+                options: [
+                    { text: "Натисну, щоб не втратити гроші від держави.", correct: false, msg: "Державні органи не збирають дані карток через кнопки в листах. Це фішинг!" },
+                    { text: "Видалю лист і перевірю інформацію в офіційному застоснунку (наприклад, Дія).", correct: true, msg: "Блискуче! Офіційні сервіси — найнадійніше джерело." }
+                ]
+            },
+            {
+                title: "У соціальній мережі з'явилося опитування: 'Хто ти з героїв Marvel?'. Для результату просять вказати дівоче прізвище матері. Навіщо це їм?",
+                options: [
+                    { text: "Просто частина алгоритму тесту.", correct: false, msg: "Ні, це спроба дізнатися відповідь на ваше секретне запитання для відновлення паролів." },
+                    { text: "Це збір даних для зламу акаунтів методом соціальної інженерії.", correct: true, msg: "Саме так. Будьте обережні з 'розважальними' тестами, що просять особисті дані." }
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let health = 100;
+
+        function updateHealthDisplay() {
+            const container = document.getElementById('health-container');
+            container.innerHTML = '';
+            const heartCount = Math.max(0, Math.ceil(health / 20));
+            for(let i=0; i<5; i++) {
+                const heart = document.createElement('span');
+                heart.innerText = i < heartCount ? '🛡️' : '🔘';
+                heart.className = i < heartCount ? 'animate-pulse' : 'opacity-30';
+                container.appendChild(heart);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('question-screen').classList.remove('hidden');
+            updateHealthDisplay();
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            const progress = ((currentQuestion) / questions.length) * 100;
+            
+            document.getElementById('top-progress').style.width = `${progress}%`;
+            document.getElementById('progress-text').innerText = `РІВЕНЬ ${currentQuestion + 1}`;
+            document.getElementById('question-title').innerText = q.title;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = "text-left p-4 bg-slate-700/80 hover:bg-blue-900/40 rounded-xl border border-slate-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-400";
+                btn.innerText = opt.text;
+                btn.onclick = () => handleAnswer(opt);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(opt) {
+            const feedback = document.getElementById('feedback');
+            const fTitle = document.getElementById('feedback-title');
+            const fMsg = document.getElementById('feedback-msg');
+            const fIcon = document.getElementById('feedback-icon');
+            const fCard = document.getElementById('feedback-card');
+            
+            if (opt.correct) {
+                score++;
+                fTitle.innerText = "ЗАХИЩЕНО";
+                fTitle.className = "text-2xl font-bold text-green-400";
+                fIcon.innerText = "✅";
+                fCard.className = "bg-slate-800 p-8 rounded-2xl border-2 border-green-500 max-w-md w-full text-center space-y-6 shadow-2xl scale-100";
+            } else {
+                health -= 25;
+                fTitle.innerText = "ВРАЗЛИВІСТЬ";
+                fTitle.className = "text-2xl font-bold text-red-500";
+                fIcon.innerText = "❌";
+                fCard.className = "bg-slate-800 p-8 rounded-2xl border-2 border-red-500 max-w-md w-full text-center space-y-6 shadow-2xl scale-100";
+            }
+            
+            fMsg.innerText = opt.msg;
+            document.getElementById('score-text').innerText = `МІЦНІСТЬ: ${Math.max(0, health)}%`;
+            updateHealthDisplay();
+            feedback.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback').classList.add('hidden');
+            currentQuestion++;
+            
+            if (currentQuestion < questions.length && health > 0) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('top-progress').style.width = `100%`;
+            document.getElementById('question-screen').classList.add('hidden');
+            const resultScreen = document.getElementById('result-screen');
+            resultScreen.classList.remove('hidden');
+            
+            const rTitle = document.getElementById('result-title');
+            const rDesc = document.getElementById('result-desc');
+            const rIcon = document.getElementById('result-icon');
+            document.getElementById('final-stats').innerText = `${score} / ${questions.length}`;
+            
+            if (score === questions.length) {
+                rTitle.innerText = "МАЙСТЕР КІБЕРБЕЗПЕКИ";
+                rDesc.innerText = "Ваш рівень цифрової грамотності вражає! Ви надійно захищені від сучасних кіберзагроз.";
+                rIcon.innerHTML = `<div class="text-8xl">💎</div>`;
+            } else if (score >= 5) {
+                rTitle.innerText = "СВІДОМИЙ КОРИСТУВАЧ";
+                rDesc.innerText = "Ви добре орієнтуєтесь у питаннях безпеки, але пам'ятайте: шахраї постійно вдосконалюють свої методи.";
+                rIcon.innerHTML = `<div class="text-8xl">🛡️</div>`;
+            } else {
+                rTitle.innerText = "ПОТРІБНЕ ПЕРЕЗАВАНТАЖЕННЯ";
+                rDesc.innerText = "Ваш рівень захисту низький. Рекомендуємо частіше читати поради з кібергігієни, щоб уникнути халеп.";
+                rIcon.innerHTML = `<div class="text-8xl">⚠️</div>`;
+            }
+        }
+
+        function restartGame() {
+            currentQuestion = 0;
+            score = 0;
+            health = 100;
+            document.getElementById('score-text').innerText = `МІЦНІСТЬ: 100%`;
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
